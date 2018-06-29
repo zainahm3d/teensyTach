@@ -1,0 +1,184 @@
+#include <Adafruit_NeoPixel.h>
+
+int wakeUp = 1500;
+int shiftRpm = 9000;
+int redline = 12000;
+int brightness = 255; // 0 to 255
+int delayVal = 35;    // set wakeup sequence speed
+bool EngRunning = false;
+
+int rpm = 0;
+
+int pixelPin = 2;
+
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(16, pixelPin, NEO_GRB + NEO_KHZ800);
+
+void lightShow() {
+
+  strip.clear(); // green bits
+  for (int i = 0; i < 10; i++) {
+    for (int j = 0; j < i; j++) {
+      strip.setPixelColor(j, 0, 255, 0);
+    }
+
+    strip.show();
+    delay(delayVal);
+  }
+
+  delay(50);
+  strip.clear(); // green bits
+  for (int i = 0; i < 10; i++) {
+    for (int j = 0; j < i; j++) {
+      strip.setPixelColor(j, 0, 255, 0);
+    }
+
+    strip.show();
+    delay(delayVal);
+  }
+
+  strip.clear();
+
+  for (int i = 10; i < 16; i++) { // yellow bits
+    for (int j = 0; j < 10; j++) {
+      strip.setPixelColor(j, 255, 255, 0);
+    }
+    strip.show();
+    strip.setPixelColor(i, 255, 255, 0);
+    if (i > 10) {
+      delay(delayVal);
+    }
+  }
+
+  delay(50);
+  strip.clear(); // green bits
+  for (int i = 0; i < 10; i++) {
+    for (int j = 0; j < i; j++) {
+      strip.setPixelColor(j, 0, 255, 0);
+    }
+    strip.show();
+    delay(delayVal);
+  }
+
+  strip.clear();
+  for (int i = 10; i < 16; i++) { // yellow bits
+    for (int j = 0; j < 10; j++) {
+      strip.setPixelColor(j, 255, 255, 0);
+    }
+    strip.show();
+    strip.setPixelColor(i, 255, 255, 0);
+    if (i > 10) {
+      delay(delayVal);
+    }
+  }
+
+  for (int i = 0; i < 25; i++) {
+    strip.clear();
+
+    for (int j = 0; j < 16; j++)
+      strip.setPixelColor(j, 255, 0, 0);
+
+    strip.show();
+    delay(20);
+    strip.clear();
+
+    for (int j = 0; j < 16; j++) {
+      strip.setPixelColor(j, 0, 0, 0);
+    }
+
+    strip.show();
+    delay(20);
+  }
+}
+
+//---End wake sequence---
+
+void setup() {
+  strip.begin();
+  strip.setBrightness(brightness);
+  strip.show();
+  lightShow();
+}
+
+void loop() {
+
+  /*check if engine running here and find rpm
+  if engine is not running, display throttle pedal in blue*/
+
+  if (EngRunning == false) { // heartbeat
+    for (int i = 0; i <= 15; i++) {
+      strip.setPixelColor(i, 255, 0, 0);
+      strip.show();
+    }
+
+    delay(70);
+
+    for (int i = 0; i < 16; i++) {
+      strip.setPixelColor(i, 40, 0, 0);
+      strip.show();
+    }
+
+    delay(80);
+
+    for (int i = 0; i < 16; i++) {
+      strip.setPixelColor(i, 255, 0, 0);
+      strip.show();
+    }
+
+    delaıy(70);
+
+    for (int i = 0; i < 16; i++) {
+      strip.setPixelColor(i, 40, 0, 0);
+      strip.show();
+    }
+    strip.clear();
+    delay(1500);
+  }
+}
+
+void setLights() {
+
+  if ((rpm > wakeUp) && (rpm < shiftRpm)) { // ----- NORMAL REVS -----
+
+    strip.clear();
+
+    int numLEDs = strip.numPixels();
+    float rpmPerLED =
+        ((redline - wakeUp) / numLEDs); // calculates how many rpm per led
+    int ledsToLight = ceil(rpm / rpmPerLED);
+
+    for (int i = 0; i <= ledsToLight; i++) {
+
+      strip.setPixelColor(i, 0, 255, 0);
+    }
+
+    strip.show();
+  }
+
+  if ((rpm > shiftRpm) && (rpm < redline)) { // ----- SHIFT POINT-----
+    strip.clear();
+
+    int numLEDs = strip.numPixels();
+    float rpmPerLED =
+        ((redline - wakeUp) / numLEDs); // calculates how many rpm per led
+    int ledsToLight = ceil(rpm / rpmPerLED);
+
+    for (int i = 0; i <= ledsToLight; i++) {
+
+      strip.setPixelColor(i, 255, 255, 0); // yellow
+    }
+
+    strip.show();
+  }
+
+  if (rpm > redline) { //----- REDLINE -----
+    for (unsigned int i = 0; i < strip.numPixels(); i++) {
+      strip.setPixelColor(i, 255, 0, 0);
+    }
+
+    strip.show();
+    delay(20);
+    strip.clear();
+    strip.show();
+    delay(20);
+  }
+}
