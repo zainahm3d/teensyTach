@@ -1,6 +1,8 @@
 /*
-   Object Oriented CAN based tachometer controller for FSAE
+   Object Oriented CAN based tachometer controller for WMU FSAE
    Designed by Zain Ahmed
+
+   Made for Teensy 3.2/3.1
  */
 
 #include <FlexCAN.h>
@@ -13,10 +15,19 @@ int brightness = 255; // 0 to 255
 int delayVal = 35;    // set wakeup sequence speed
 bool EngRunning = false;
 
-
 int pixelPin = 2;
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(16, pixelPin, NEO_GRB + NEO_KHZ800);
+
+void displayTPS(double tp) { //display throttle position if engine is not running
+        strip.clear();
+        int ledsToLight = ceil(map(tp, 0, 100, 0, 16));
+
+        for (int i = 0; i < ledsToLight; i++) {
+                strip.setPixelColor(i, 0, 255, 255);
+        }
+        strip.show();
+}
 
 void setLights(int rpm) {
 
@@ -92,7 +103,7 @@ void canClass::gotFrame(CAN_message_t &frame, int mailbox) //runs every time a f
         printFrame(frame, mailbox);
         digitalWrite(13, !digitalRead(13));
 
-        if (frame.id == 218099784) {
+        if (frame.id == 218099784) { //frame has rpm and tps percentage
                 int lowByte = frame.buf[0];
                 int highByte = frame.buf[1];
                 int newRPM = ((highByte * 256) + lowByte);
@@ -102,6 +113,12 @@ void canClass::gotFrame(CAN_message_t &frame, int mailbox) //runs every time a f
                         setLights(newRPM);
                 } else {
                         EngRunning = false;
+                        double lowByte = frame.buf[2];
+                        double highByte = frame.buf[3];
+                        double tps = ((highByte * 256) + lowByte) / 10;
+                        if (tps > 20) {
+                                displayTPS(tps);
+                        }
                 }
 
         }
