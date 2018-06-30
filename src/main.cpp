@@ -15,7 +15,7 @@ int brightness = 255; // 0 to 255
 int delayVal = 35;    // set wakeup sequence speed
 bool EngRunning = false;
 
-int pixelPin = 2;
+int pixelPin = 14;
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(16, pixelPin, NEO_GRB + NEO_KHZ800);
 
