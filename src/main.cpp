@@ -153,7 +153,7 @@ void lightShow() {
 
         strip.clear();
 
-        for (int i = 10; i < 16; i++) { // yellow bits
+        for (int i = 10; i < strip.numPixels(); i++) { // yellow bits
                 for (int j = 0; j < 10; j++) {
                         strip.setPixelColor(j, 255, 255, 0);
                 }
@@ -175,7 +175,7 @@ void lightShow() {
         }
 
         strip.clear();
-        for (int i = 10; i < 16; i++) { // yellow bits
+        for (int i = 10; i < strip.numPixels(); i++) { // yellow bits
                 for (int j = 0; j < 10; j++) {
                         strip.setPixelColor(j, 255, 255, 0);
                 }
@@ -189,14 +189,14 @@ void lightShow() {
         for (int i = 0; i < 25; i++) {
                 strip.clear();
 
-                for (int j = 0; j < 16; j++)
+                for (int j = 0; j < strip.numPixels(); j++)
                         strip.setPixelColor(j, 255, 0, 0);
 
                 strip.show();
                 delay(20);
                 strip.clear();
 
-                for (int j = 0; j < 16; j++) {
+                for (int j = 0; j < strip.numPixels(); j++) {
                         strip.setPixelColor(j, 0, 0, 0);
                 }
 
@@ -207,7 +207,6 @@ void lightShow() {
 
 void setup(void)
 {
-        delay(2000);
         Serial.println("online");
 
         Can0.begin(250000); //PE3 ECU SPEED
@@ -228,28 +227,28 @@ void setup(void)
 void loop(void)
 {
         if (EngRunning == false) { // heartbeat
-                for (int i = 0; i <= 15; i++) {
+                for (int i = 0; i < strip.numPixels(); i++) {
                         strip.setPixelColor(i, 255, 0, 0);
                         strip.show();
                 }
 
                 delay(70);
 
-                for (int i = 0; i < 16; i++) {
+                for (int i = 0; i < strip.numPixels(); i++) {
                         strip.setPixelColor(i, 40, 0, 0);
                         strip.show();
                 }
 
                 delay(80);
 
-                for (int i = 0; i < 16; i++) {
+                for (int i = 0; i < strip.numPixels(); i++) {
                         strip.setPixelColor(i, 255, 0, 0);
                         strip.show();
                 }
 
                 delay(70);
 
-                for (int i = 0; i < 16; i++) {
+                for (int i = 0; i < strip.numPixels(); i++) {
                         strip.setPixelColor(i, 40, 0, 0);
                         strip.show();
                 }
