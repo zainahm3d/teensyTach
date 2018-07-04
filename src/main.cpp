@@ -233,7 +233,7 @@ void setup(void)
 void loop(void)
 {
         if (EngRunning == false && showingTPS == false) { // heartbeat
-                for (int i = 0; i <= 15; i++) {
+                for (int i = 0; i <= strip.numPixels(); i++) {
                         strip.setPixelColor(i, 255, 0, 0);
                         strip.show();
                 }
