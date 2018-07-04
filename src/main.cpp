@@ -13,7 +13,9 @@ int shiftRpm = 9000;
 int redline = 12000;
 int brightness = 255; // 0 to 255
 int delayVal = 35;    // set wakeup sequence speed
+
 bool EngRunning = false;
+bool showingTPS = false;
 
 int pixelPin = 14;
 
@@ -110,6 +112,7 @@ void canClass::gotFrame(CAN_message_t &frame, int mailbox) //runs every time a f
 
                 if (newRPM != 0) {
                         EngRunning = true;
+                        showingTPS = false;
                         setLights(newRPM);
                 } else {
                         EngRunning = false;
@@ -117,7 +120,10 @@ void canClass::gotFrame(CAN_message_t &frame, int mailbox) //runs every time a f
                         double highByte = frame.buf[3];
                         double tps = ((highByte * 256) + lowByte) / 10;
                         if (tps > 20) {
+                                showingTPS = true;
                                 displayTPS(tps);
+                        } else {
+                          showingTPS = false;
                         }
                 }
 
@@ -227,7 +233,7 @@ void setup(void)
 // -------------------------------------------------------------
 void loop(void)
 {
-        if (EngRunning == false) { // heartbeat
+        if (EngRunning == false && showingTPS == false) { // heartbeat
                 for (int i = 0; i <= 15; i++) {
                         strip.setPixelColor(i, 255, 0, 0);
                         strip.show();
