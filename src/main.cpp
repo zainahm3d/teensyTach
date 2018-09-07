@@ -123,7 +123,7 @@ void canClass::gotFrame(CAN_message_t &frame, int mailbox) //runs every time a f
                                 showingTPS = true;
                                 displayTPS(tps);
                         } else {
-                          showingTPS = false;
+                                showingTPS = false;
                         }
                 }
 
@@ -217,6 +217,14 @@ void setup(void)
 
         Can0.begin(250000); //PE3 ECU SPEED
 
+
+        //Allow Extended CAN id's through
+        CAN_filter_t allPassFilter;
+        allPassFilter.ext=1;
+        for (uint8_t filterNum = 1; filterNum < 16; filterNum++) { //original filternum was 8
+                Can0.setFilter(allPassFilter,filterNum);
+        }
+
         pinMode(13, OUTPUT);
         digitalWrite(13, HIGH);
         Can0.attachObj(&canClass);
@@ -225,13 +233,15 @@ void setup(void)
         strip.begin();
         strip.setBrightness(brightness);
         strip.show();
+
         lightShow();
 }
-
 
 // -------------------------------------------------------------
 void loop(void)
 {
+        Serial.println("hi");
+        delay(100);
         if (EngRunning == false && showingTPS == false) { // heartbeat
                 for (int i = 0; i <= strip.numPixels(); i++) {
                         strip.setPixelColor(i, 255, 0, 0);
