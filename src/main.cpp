@@ -1,8 +1,12 @@
 /*
-   Object Oriented CAN based tachometer controller for WMU FSAE
+   CAN based tachometer controller for WMU FSAE
    Designed by Zain Ahmed
 
+   Shows TPS percentage, battery status, and RPMs
+
    Made for Teensy 3.2/3.1
+
+   PE3 CAN Protocol: http://pe-ltd.com/assets/AN400_CAN_Protocol_C.pdf
  */
 
 #include <FlexCAN.h>
@@ -16,8 +20,11 @@ int delayVal = 35;    // set wakeup sequence speed
 
 bool EngRunning = false;
 bool showingTPS = false;
+bool ecuOn = false;
 
 int pixelPin = 14;
+
+long lastEcuMillis = 0;
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(16, pixelPin, NEO_GRB + NEO_KHZ800);
 
@@ -106,6 +113,10 @@ void canClass::gotFrame(CAN_message_t &frame, int mailbox) //runs every time a f
         digitalWrite(13, !digitalRead(13));
 
         if (frame.id == 218099784) { //frame has rpm and tps percentage
+
+                ecuOn = true; //this frame can only come from the ECU
+                lastEcuMillis = millis(); //start a timer for the next frame
+
                 int lowByte = frame.buf[0];
                 int highByte = frame.buf[1];
                 int newRPM = ((highByte * 256) + lowByte);
@@ -125,6 +136,36 @@ void canClass::gotFrame(CAN_message_t &frame, int mailbox) //runs every time a f
                         } else {
                                 showingTPS = false;
                         }
+                }
+
+        }
+
+        //this frame carries voltage, air temp, and coolant temp
+        if (frame.id == 218101064 && EngRunning == false && ecuOn == true && showingTPS == false) {
+                int lowByte = frame.buf[0];
+                int highByte = frame.buf[1];
+                int voltage = ((highByte * 256) + lowByte);
+                voltage /= 100;
+
+                Serial.println(voltage);
+
+                // int ledsToLight = ceil(map(voltage, 6, 15, 0, 16)); //turn on some leds
+
+                uint32_t batColor;         //color of strip to show battery status
+                if (voltage < 10) {
+                        batColor = strip.Color(255, 0, 0);
+                } else if (voltage >= 10 &&  voltage < 12) {
+                        batColor = strip.Color(255, 255, 0);
+                } else if (voltage >= 12 && voltage < 13) {
+                        batColor = strip.Color(0, 255, 0);
+                } else if (voltage > 13) {
+                        batColor = strip.Color(0, 0, 255);
+                }
+
+                strip.clear();
+                for (int i = 0; i < strip.numPixels(); i++) {
+                        strip.setPixelColor(i, batColor);
+                        strip.show();
                 }
 
         }
@@ -240,9 +281,14 @@ void setup(void)
 // -------------------------------------------------------------
 void loop(void)
 {
-        Serial.println("hi");
+
+        if ((millis() - lastEcuMillis) > 2000) {
+                ecuOn = false;
+                Serial.println("ECU Offline");
+        }
+
         delay(100);
-        if (EngRunning == false && showingTPS == false) { // heartbeat
+        if (EngRunning == false && showingTPS == false && ecuOn == false) { // heartbeat
                 for (int i = 0; i <= strip.numPixels(); i++) {
                         strip.setPixelColor(i, 255, 0, 0);
                         strip.show();
