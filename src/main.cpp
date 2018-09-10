@@ -14,13 +14,15 @@
 
 int wakeUp = 1500;
 int shiftRpm = 9000;
-int redline = 12000;
+int redline = 11250;
 int brightness = 255; // 0 to 255
 int delayVal = 35;    // set wakeup sequence speed
 
+//control flags
 bool EngRunning = false;
 bool showingTPS = false;
 bool ecuOn = false;
+bool wakeupComplete = false;
 
 int pixelPin = 14;
 
@@ -109,6 +111,7 @@ void canClass::printFrame(CAN_message_t &frame, int mailbox)
 
 void canClass::gotFrame(CAN_message_t &frame, int mailbox) //runs every time a frame is recieved
 {
+
         printFrame(frame, mailbox);
         digitalWrite(13, !digitalRead(13));
 
@@ -121,7 +124,7 @@ void canClass::gotFrame(CAN_message_t &frame, int mailbox) //runs every time a f
                 int highByte = frame.buf[1];
                 int newRPM = ((highByte * 256) + lowByte);
 
-                if (newRPM != 0) {
+                if (newRPM > 500) {
                         EngRunning = true;
                         showingTPS = false;
                         setLights(newRPM);
@@ -141,15 +144,16 @@ void canClass::gotFrame(CAN_message_t &frame, int mailbox) //runs every time a f
         }
 
         //this frame carries voltage, air temp, and coolant temp
-        if (frame.id == 218101064 && EngRunning == false && ecuOn == true && showingTPS == false) {
+        if (frame.id == 218101064 && EngRunning == false && ecuOn == true && showingTPS == false && wakeupComplete == true) {
+                strip.clear();
+
                 int lowByte = frame.buf[0];
                 int highByte = frame.buf[1];
                 int voltage = ((highByte * 256) + lowByte);
                 voltage /= 100;
-
                 Serial.println(voltage);
 
-                // int ledsToLight = ceil(map(voltage, 6, 15, 0, 16)); //turn on some leds
+                int ledsToLight = ceil(map(voltage, 6, 15, 0, strip.numPixels())); //turn on some leds
 
                 uint32_t batColor;         //color of strip to show battery status
                 if (voltage < 10) {
@@ -158,15 +162,15 @@ void canClass::gotFrame(CAN_message_t &frame, int mailbox) //runs every time a f
                         batColor = strip.Color(255, 255, 0);
                 } else if (voltage >= 12 && voltage < 13) {
                         batColor = strip.Color(0, 255, 0);
-                } else if (voltage > 13) {
+                } else if (voltage >= 13) {
                         batColor = strip.Color(0, 0, 255);
                 }
 
-                strip.clear();
-                for (int i = 0; i < strip.numPixels(); i++) {
+                for (int i = 0; i < ledsToLight; i++) {
                         strip.setPixelColor(i, batColor);
-                        strip.show();
                 }
+
+                strip.show();
 
         }
 }
@@ -175,7 +179,7 @@ canClass canClass;
 
 // -------------------------------------------------------------
 
-void lightShow() {
+void lightShow(void) {
 
         strip.clear(); // green bits
         for (int i = 0; i < 10; i++) {
@@ -250,6 +254,8 @@ void lightShow() {
                 strip.show();
                 delay(20);
         }
+
+        wakeupComplete = true;
 }
 
 void setup(void)
@@ -284,6 +290,7 @@ void loop(void)
 
         if ((millis() - lastEcuMillis) > 2000) {
                 ecuOn = false;
+                EngRunning = false;
                 Serial.println("ECU Offline");
         }
 
