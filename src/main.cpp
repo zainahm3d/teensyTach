@@ -101,7 +101,7 @@ class canClass : public CANListener
 {
       public:
         void printFrame(CAN_message_t &frame, int mailbox);
-        void gotFrame(CAN_message_t &frame, int mailbox); //overrides the parent version so we can actually do something
+        void gotFrame(CAN_message_t &frame, int mailbox);
 };
 
 void canClass::printFrame(CAN_message_t &frame, int mailbox)
@@ -197,8 +197,6 @@ void canClass::gotFrame(CAN_message_t &frame, int mailbox) //runs every time a f
                 strip.show();
         }
 }
-
-canClass canClass;
 
 // -------------------------------------------------------------
 
@@ -299,6 +297,8 @@ void lightShow(void)
 void setup(void)
 {
         Serial.println("online");
+
+        canClass canClass;
 
         Can0.begin(250000); //PE3 ECU SPEED
 
