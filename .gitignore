@@ -5,3 +5,9 @@
 .vscode/.browse.c_cpp.db*
 .vscode/c_cpp_properties.json
 .vscode/launch.json
+.vscode/ipch/9add25aee15a08eb/mmap_address.bin
+.vscode/ipch/74dc17527ee5856b/WiFiGeneric.ipch
+.vscode/ipch/68e91d3d48383e7b/mmap_address.bin
+.vscode/ipch/74dc17527ee5856b/mmap_address.bin
+.vscode/ipch/1ac8378e66f3f2e6/mmap_address.bin
+.vscode/ipch/1ac8378e66f3f2e6/main.ipch
